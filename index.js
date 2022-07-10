@@ -5,9 +5,6 @@ const fastCSV = require("fast-csv");
 
 const API_KEY =
   "49eba55a4d05cb02073c57d26df63e232773321deac73dd0e7add57ff422eb4d";
-const URL =
-  "https://min-api.cryptocompare.com/data/pricemulti?fsyms=BTC,ETH,XRP&tsyms=USD&api_key=" +
-  API_KEY;
 
 const args = yargs.argv;
 const { token, date, customFilePath, customTokenTypes } = args;
@@ -36,6 +33,10 @@ const tokenTypes = (customTokenTypes &&
   "XRP",
 ];
 console.log(`Token types: ${tokenTypes.join(",")}`);
+
+const URL = `https://min-api.cryptocompare.com/data/pricemulti?fsyms=${tokenTypes.join(
+  ","
+)}&tsyms=USD&api_key=${API_KEY}`;
 
 const convertEpochToDate = (epoch) => {
   return new Date(epoch * 1000);
