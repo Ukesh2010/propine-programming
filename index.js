@@ -6,7 +6,7 @@ const fastCSV = require("fast-csv");
 const API_KEY =
   "49eba55a4d05cb02073c57d26df63e232773321deac73dd0e7add57ff422eb4d";
 const URL =
-  "https://min-api.cryptocompare.com/data/pricemulti?fsyms=ETH&tsyms=USD&api_key=" +
+  "https://min-api.cryptocompare.com/data/pricemulti?fsyms=BTC,ETH,XRP&tsyms=USD&api_key=" +
   API_KEY;
 const file = "transactions.csv";
 
@@ -20,7 +20,11 @@ const getAmountInUSD = (amount, usdRate) => {
   return (amount * usdRate).toFixed(2);
 };
 
-const processTransaction = (row, data) => {
+const processTransaction = (row, data, token) => {
+  if (token && token !== row.token) {
+    return;
+  }
+
   const typeData = data[row.token];
 
   if (row.transaction_type === "DEPOSIT") {
@@ -35,7 +39,7 @@ const processTransaction = (row, data) => {
   }
 };
 
-const getLatestPortfolioValuePerToken = () => {
+const getLatestPortfolioValuePerToken = (token) => {
   return new Promise((resolve, reject) => {
     const data = {
       BTC: { amount: 0, timestamp: 0 },
@@ -49,7 +53,7 @@ const getLatestPortfolioValuePerToken = () => {
         reject(error);
       })
       .on("data", (row) => {
-        processTransaction(row, data);
+        processTransaction(row, data, token);
       })
       .on("end", (rowCount) => {
         resolve(data);
@@ -59,7 +63,7 @@ const getLatestPortfolioValuePerToken = () => {
 
 (async () => {
   const response = await axios.get(URL);
-  const usdRate = response.data.ETH.USD || 0;
+  const rates = response.data || 0;
 
   if (!token && !date) {
     console.log("No arguments are provided.");
@@ -67,27 +71,32 @@ const getLatestPortfolioValuePerToken = () => {
 
     const data = await getLatestPortfolioValuePerToken();
 
-    console.log(`Latest portfolio values:\n`);
-    console.log(
-      `XRP (${convertEpochToDate(data.XRP.timestamp)}): $${getAmountInUSD(
-        data.XRP.amount,
-        usdRate
-      )}\n`
-    );
-    console.log(
-      `ETH (${convertEpochToDate(data.ETH.timestamp)}): $${getAmountInUSD(
-        data.ETH.amount,
-        usdRate
-      )}\n`
-    );
-    console.log(
-      `BTC (${convertEpochToDate(data.BTC.timestamp)}): $${getAmountInUSD(
-        data.BTC.amount,
-        usdRate
-      )}\n`
-    );
+    console.log(`Latest portfolio values:\n
+              XRP (${convertEpochToDate(
+                data.XRP.timestamp
+              )}): $${getAmountInUSD(data.XRP.amount, rates?.XRP?.USD || 0)}\n
+              ETH (${convertEpochToDate(
+                data.ETH.timestamp
+              )}): $${getAmountInUSD(data.ETH.amount, rates?.ETH?.USD || 0)}\n  
+              BTC (${convertEpochToDate(
+                data.BTC.timestamp
+              )}): $${getAmountInUSD(
+      data.BTC.amount,
+      rates?.BTC?.USD || 0
+    )}\n    
+    `);
   } else if (token && !date) {
     console.log("Token is provided.", token);
+    console.log("Calculating...");
+
+    const data = await getLatestPortfolioValuePerToken(token);
+    const tokenData = data[token];
+
+    console.log(
+      `Latest portfolio value for ${token} (${convertEpochToDate(
+        tokenData.timestamp
+      )}): $${getAmountInUSD(tokenData.amount, rates[token]?.USD)}\n`
+    );
   } else if (!token && !date) {
     console.log("Date is provided.", date);
   } else {
