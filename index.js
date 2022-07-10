@@ -21,9 +21,9 @@ if (token && !tokenTypes.includes(token)) {
 
 if (
   date &&
-  !date.match("(0[1-9]|[12]\\d|3[01]))-(0[1-9]|1[0-2])-([12]\\d{3}")
+  !date.match("([12]\\d{3})-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])")
 ) {
-  console.log("Invalid date. Please use dd-mm-yyyy format.");
+  console.log("Invalid date. Please use yyyy-mm-dd format.");
   return;
 }
 
