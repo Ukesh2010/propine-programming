@@ -2,6 +2,7 @@ const yargs = require("yargs");
 const axios = require("axios");
 const fs = require("fs");
 const fastCSV = require("fast-csv");
+const { format } = require("date-fns");
 
 const API_KEY =
   "49eba55a4d05cb02073c57d26df63e232773321deac73dd0e7add57ff422eb4d";
@@ -120,10 +121,10 @@ const getPortfolio = (token, date) => {
 
       console.log(`Latest portfolio values:\n`);
       tokenTypes.forEach((tokenType) => {
+        const latestDate = convertEpochToDate(data[tokenType].timestamp);
+        const formattedLatestDate = format(latestDate, "yyyy-MM-dd");
         console.log(
-          `${tokenType} on ${convertEpochToDate(
-            data[tokenType].timestamp
-          )} : $${getAmountInUSD(
+          `${tokenType} on ${formattedLatestDate} : $${getAmountInUSD(
             data[tokenType].amount,
             rates[tokenType]?.USD || 0
           )}\n`
@@ -135,10 +136,14 @@ const getPortfolio = (token, date) => {
       const data = await getPortfolio(token);
       const tokenData = data[token];
 
+      const latestDate = convertEpochToDate(tokenData.timestamp);
+      const formattedLatestDate = format(latestDate, "yyyy-MM-dd");
+
       console.log(
-        `Latest portfolio value for ${token} on (${convertEpochToDate(
-          tokenData.timestamp
-        )}): $${getAmountInUSD(tokenData.amount, rates[token]?.USD)}\n`
+        `Latest portfolio value for ${token} on (${formattedLatestDate}): $${getAmountInUSD(
+          tokenData.amount,
+          rates[token]?.USD
+        )}\n`
       );
     } else if (!token && date) {
       console.log("Calculating...");

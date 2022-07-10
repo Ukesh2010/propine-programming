@@ -19,6 +19,7 @@
   "homepage": "https://github.com/Ukesh2010/propine-programming#readme",
   "dependencies": {
     "axios": "^0.27.2",
+    "date-fns": "^2.28.0",
     "fast-csv": "^4.3.6",
     "yargs": "^17.5.1"
   }
