@@ -9,6 +9,20 @@ const API_KEY =
 const args = yargs.argv;
 const { token, date, customFilePath, customTokenTypes } = args;
 
+const filePath = customFilePath || "transactions.csv";
+console.log(`Filepath: ${filePath}`);
+const tokenTypes = (customTokenTypes &&
+  customTokenTypes.split(",").map((tokenType) => tokenType.trim())) || [
+  "BTC",
+  "ETH",
+  "XRP",
+];
+console.log(`Token types: ${tokenTypes.join(",")}`);
+
+const URL = `https://min-api.cryptocompare.com/data/pricemulti?fsyms=${tokenTypes.join(
+  ","
+)}&tsyms=USD&api_key=${API_KEY}`;
+
 if (token && !tokenTypes.includes(token)) {
   console.log(
     "Invalid token type. Available options are " + tokenTypes.join(",")
@@ -23,20 +37,6 @@ if (
   console.log("Invalid date. Please use yyyy-mm-dd format.");
   return;
 }
-
-const filePath = customFilePath || "transactions.csv";
-console.log(`Filepath: ${filePath}`);
-const tokenTypes = (customTokenTypes &&
-  customTokenTypes.split(",").map((tokenType) => tokenType.trim())) || [
-  "BTC",
-  "ETH",
-  "XRP",
-];
-console.log(`Token types: ${tokenTypes.join(",")}`);
-
-const URL = `https://min-api.cryptocompare.com/data/pricemulti?fsyms=${tokenTypes.join(
-  ","
-)}&tsyms=USD&api_key=${API_KEY}`;
 
 const convertEpochToDate = (epoch) => {
   return new Date(epoch * 1000);
