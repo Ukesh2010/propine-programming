@@ -20,9 +20,24 @@ const getAmountInUSD = (amount, usdRate) => {
   return (amount * usdRate).toFixed(2);
 };
 
-const processTransaction = (row, data, token) => {
+const getEndOfDay = (date) => {
+  const dateInstance = new Date(date);
+  dateInstance.setHours(23, 59, 59, 999);
+
+  return dateInstance;
+};
+
+const processTransaction = (row, data, token, date) => {
   if (token && token !== row.token) {
     return;
+  }
+
+  if (date) {
+    const rowDate = convertEpochToDate(row.timestamp);
+    const isRowAfterDate = rowDate.getTime() > date.getTime();
+    if (isRowAfterDate) {
+      return;
+    }
   }
 
   const typeData = data[row.token];
@@ -34,12 +49,14 @@ const processTransaction = (row, data, token) => {
   }
 
   typeData.amount = row.amount;
-  if (row.timestamp > typeData.timestamp) {
-    typeData.timestamp = row.timestamp;
+  if (!date) {
+    if (row.timestamp > typeData.timestamp) {
+      typeData.timestamp = row.timestamp;
+    }
   }
 };
 
-const getLatestPortfolioValuePerToken = (token) => {
+const getLatestPortfolioValuePerToken = (token, date) => {
   return new Promise((resolve, reject) => {
     const data = {
       BTC: { amount: 0, timestamp: 0 },
@@ -53,7 +70,7 @@ const getLatestPortfolioValuePerToken = (token) => {
         reject(error);
       })
       .on("data", (row) => {
-        processTransaction(row, data, token);
+        processTransaction(row, data, token, date);
       })
       .on("end", (rowCount) => {
         resolve(data);
@@ -93,13 +110,45 @@ const getLatestPortfolioValuePerToken = (token) => {
     const tokenData = data[token];
 
     console.log(
-      `Latest portfolio value for ${token} (${convertEpochToDate(
+      `Latest portfolio value for ${token} on (${convertEpochToDate(
         tokenData.timestamp
       )}): $${getAmountInUSD(tokenData.amount, rates[token]?.USD)}\n`
     );
-  } else if (!token && !date) {
+  } else if (!token && date) {
     console.log("Date is provided.", date);
+    console.log("Calculating...");
+
+    const data = await getLatestPortfolioValuePerToken(
+      undefined,
+      getEndOfDay(date)
+    );
+
+    console.log(`Portfolio values on ${date}:\n
+              XRP : $${getAmountInUSD(data.XRP.amount, rates?.XRP?.USD || 0)}\n
+              ETH : $${getAmountInUSD(
+                data.ETH.amount,
+                rates?.ETH?.USD || 0
+              )}\n  
+              BTC : $${getAmountInUSD(
+                data.BTC.amount,
+                rates?.BTC?.USD || 0
+              )}\n    
+    `);
   } else {
     console.log("Token and Date both are provided.", { token, date });
+    console.log("Calculating...");
+
+    const data = await getLatestPortfolioValuePerToken(
+      token,
+      getEndOfDay(date)
+    );
+    const tokenData = data[token];
+
+    console.log(
+      `Portfolio value for ${token} on ${date} : $${getAmountInUSD(
+        tokenData.amount,
+        rates[token]?.USD
+      )}\n`
+    );
   }
 })();
