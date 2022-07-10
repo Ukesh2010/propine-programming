@@ -1,0 +1,23 @@
+{
+  "name": "propine-programming",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ukesh2010/propine-programming.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Ukesh2010/propine-programming/issues"
+  },
+  "homepage": "https://github.com/Ukesh2010/propine-programming#readme",
+  "dependencies": {
+    "yargs": "^17.5.1"
+  }
+}
